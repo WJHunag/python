@@ -1,0 +1,510 @@
+/* 覆蓋主 CSS 的 overflow hidden 設定 */
+body {
+  overflow: auto !important;
+}
+
+.camera-page {
+  background: #121212;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.camera-page-topbar {
+  height: 60px;
+  background: #0E0E0E;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 32px;
+}
+
+.topbar-info-section {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.location-title {
+  font-size: 18px;
+  color: #fff;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* 頂部導航欄中的頻道和 IP 資訊樣式 */
+.topbar-info-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 0;
+}
+
+.topbar-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+}
+
+.topbar-info-separator {
+  color: #666;
+  font-size: 12px;
+  margin: 0 4px;
+  /* visibility: hidden; */
+}
+
+.topbar-info-label {
+  color: #A0A0A0;
+  font-size: 12px;
+}
+
+.topbar-info-value {
+  color: #fff;
+  font-size: 12px;
+}
+
+.topbar-type {
+  color: #A0A0A0;
+  font-size: 12px;
+}
+
+.topbar-type .camera-status .status-indicator {
+  color: #A0A0A0 !important;
+  font-size: 5px !important;
+}
+
+/* 頂部導航欄中的攝影機狀態樣式 */
+.topbar-type .camera-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+}
+
+.topbar-type .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topbar-back-section {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* 返回按鈕樣式（與主畫面完成鍵一致） */
+#back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: #333333;
+  color: #EAEAEA;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#back-btn:hover {
+  background: #444444;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+}
+
+#back-btn:active {
+  transform: translateY(1px) scale(0.99);
+  background: #3a3a3a;
+}
+
+#back-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.topbar-type .camera-status.current_polling .status-dot {
+  background-color: #2196F3; /* 藍色 - 輪詢中 */
+}
+
+.topbar-type .camera-status.waiting_polling .status-dot {
+  background-color: #FFC107; /* 黃色 - 未輪詢 */
+}
+
+.topbar-type .camera-status.fixed .status-dot {
+  background-color: #4CAF50; /* 綠色 - 常駐 */
+}
+
+.topbar-type .camera-status.error .status-dot {
+  background-color: #F44336; /* 紅色 - 異常 */
+}
+
+.camera-page-content {
+  padding: 16px;
+}
+
+/* 左右分欄佈局 */
+.camera-layout {
+  display: flex;
+  gap: 12px; /* 從 24px 縮小到 12px，縮小一倍 */
+}
+
+/* 左側圖片區 */
+.camera-image-section {
+  flex: 3; /* 佔據 3/4 的空間 */
+}
+
+.camera-preview {
+  width: 100%;
+  aspect-ratio: 7/4; /* 設定為 7:4 比例 */
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+
+.camera-no-preview {
+  width: 100%;
+  aspect-ratio: 7/4; /* 設定為 7:4 比例 */
+  background: #1A1A1A;
+  border: 1px solid #333;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-image-text {
+  color: #888;
+  font-size: 18px;
+}
+
+/* 左側頻道和 IP 資訊樣式 */
+.camera-info-details {
+  margin-top: 16px;
+  padding: 16px;
+  background: #2A2A2A;
+  border-radius: 6px;
+}
+
+.info-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #3A3A3A;
+}
+
+.info-detail-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: #A0A0A0;
+  font-size: 14px;
+}
+
+.info-value {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 右側設定區 */
+.camera-settings-section {
+  flex: 1; /* 佔據 1/4 的空間 */
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-content: start;
+  padding-bottom: 50px; /* 添加底部空間確保能滾動 */
+}
+
+.info-card, .switches-card {
+  background: transparent;
+  padding: 0;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.info-row .label { color: #A0A0A0; }
+.info-row .value { color: #fff; }
+
+.switch-list {
+  display: grid;
+  grid-template-columns: 300px 300px; /* 兩列，每列固定 300px 寬度 */
+  gap: 4px;
+}
+
+/* 現在 switch-list-container 就是主要的網格容器 */
+#switch-list-container {
+  display: grid;
+  grid-template-columns: 300px 300px; /* 兩列，每列固定 300px 寬度 */
+  gap: 4px;
+}
+
+/* 禁用狀態的樣式 */
+.switch-item input[type="checkbox"]:disabled + .switch-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mode-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.switch-item:has(input:disabled) {
+  opacity: 0.7;
+}
+
+/* 綠色按鈕樣式 */
+.button.green {
+  background-color: #28A745;
+  border-color: #28A745;
+}
+
+.button.green:hover {
+  background-color: #218838;
+  border-color: #218838;
+}
+
+.switch-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #2A2A2A;
+  border: none;
+  border-radius: 6px;
+  height: 76px;
+  box-sizing: border-box;
+}
+
+.switch-item.has-subtitle {
+  align-items: center;
+  padding: 12px 20px;
+  height: 76px;
+  box-sizing: border-box;
+}
+
+
+
+.switch-item.has-subtitle .toggle-switch {
+  margin-top: 4px;
+}
+
+/* 運作模式按鈕樣式（與完成按鈕一致） */
+.mode-buttons {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: #666666;
+  color: #EAEAEA;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.mode-btn:hover {
+  background: #444444;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+}
+
+.mode-btn:active {
+  transform: translateY(1px) scale(0.99);
+  background: #3a3a3a;
+}
+
+.mode-btn.active {
+  background: #4CAF50;
+  color: #fff;
+}
+
+.mode-btn.active:hover {
+  background: #45a049;
+}
+
+.switch-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.switch-label {
+  color: #fff;
+  font-size: 14px;
+}
+
+.switch-subtitle {
+  color: #A0A0A0;
+  font-size: 12px;
+}
+
+.switch-value {
+  color: #A0A0A0;
+  font-size: 14px;
+}
+
+/* 開關切換樣式 */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle-switch input[type="checkbox"] {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #4A4A4A;
+  border-radius: 24px;
+  transition: .3s;
+}
+
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #8A8A8A;
+  border-radius: 50%;
+  transition: .3s;
+}
+
+/* 開啟狀態 */
+input:checked + .switch-slider {
+  background-color: #4CAF50;
+}
+
+input:checked + .switch-slider:before {
+  background-color: #fff;
+  transform: translateX(20px);
+}
+
+/* 參數輸入欄位樣式 */
+.param-input {
+  background: #3A3A3A;
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 12px;
+  width: 50px; /* 縮小寬度以適應2位數 */
+  margin: 0 4px;
+}
+
+/* 移除數字輸入欄位的加減按鈕 */
+.param-input[type="number"]::-webkit-outer-spin-button,
+.param-input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.param-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.param-input:disabled {
+  background: #2A2A2A;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.param-input:enabled:focus {
+  outline: none;
+  border-color: #4CAF50;
+  background: #444;
+}
+
+.param-input[type="time"],
+.param-input.time-input[type="text"] {
+  width: 100px; /* 調整寬度為100px */
+}
+
+/* 強制使用24小時制，只顯示時和分 */
+.time-input::-webkit-datetime-edit-ampm-field {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+}
+
+.time-input::-webkit-datetime-edit-second-field {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.time-input::-webkit-datetime-edit-millisecond-field {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* 針對所有 time 輸入欄位 */
+input[type="time"].time-input::-webkit-datetime-edit-ampm-field,
+input[type="time"]::-webkit-datetime-edit-ampm-field {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.time-input,
+.force-24hr {
+  /* 確保24小時制格式 */
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+/* 針對強制24小時制的額外規則 */
+.force-24hr::-webkit-datetime-edit-ampm-field {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+.editable-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+

@@ -1,0 +1,9 @@
+flask
+requests
+watchdog
+opencv-python
+numpy
+pytz
+torch
+ultralytics
+pillow

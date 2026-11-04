@@ -1,0 +1,58 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller native extensions required by the external coordinate editor.
+# Keep the repository-wide Python cache rule, but do not drop runtime .pyd files.
+!coordinate_editor/external_coordinate_editor/_internal/**/*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# Build and packaging output
+build/
+dist/
+*.egg-info/
+
+# Logs and runtime output
+logs/
+*.log
+received_results/
+runtime/
+drive_smoke_backup/
+daily_notification_log.json
+
+# Local configuration and secrets
+.env
+.env.*
+config.ini
+smoke_config/
+
+# Generated camera/image output
+images/*/
+image/
+test.png
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Notebook checkpoints
+.ipynb_checkpoints/

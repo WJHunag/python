@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>煙霧監視器管理系統</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+  <!-- 初始化數據 -->
+  <script>
+    window.bootETag = "{{ boot_etag if boot_etag else '' }}";
+    window.changeSeq = {{ seq if seq is not none else 0 }};
+    console.log('📋 頁面載入變數:', {bootETag: window.bootETag, changeSeq: window.changeSeq});
+  </script>
+</head>
+<body>
+    <!-- Topbar -->
+    <div class="topbar">
+        <h1>煙霧監視器管理系統</h1>
+    </div>
+
+    <div class="container">
+
+    <!-- Sidebar -->
+    <div class="whole-sidebar">
+        <div class="settings-panel" id="settings-panel">
+            <div class="settings-panel-header">
+                <h2>設定模式</h2>
+                <button id="settings-toggle-btn" class="button gray">設定</button>
+            </div>
+            <div class="settings-panel-body hidden" id="settings-panel-body">
+                <div class="settings-panel-hint">點擊監視器以設定選取</div>
+                <div class="settings-panel-row">
+                    <label for="target-ip-select">工作站</label>
+                    <select id="target-ip-select"></select>
+                </div>
+                <div class="settings-panel-actions">
+                    <label><input type="radio" name="target-mode" value="current_polling">輪詢</label>
+                    <label style="margin-left:12px;"><input type="radio" name="target-mode" value="fixed">常駐</label>
+                </div>
+
+
+            </div>
+        </div>
+        <h2>監視器篩選</h2>
+        <div class="sidebar" id="sidebar">
+        <!-- JavaScript 動態插入 IP 區塊 -->
+        </div>
+    </div>
+
+    <!-- Main Content -->
+     <div class="content-wrapper">
+        <div class="content">
+        <div class="header">
+            <h2>總共管理 {{ cameras|length }} 個監視器</h2>
+            <button id="refresh-btn" class="button gray">更新</button>
+        </div>
+        <div class="polling-time">輪詢間隔時間: {{ polling_time if polling_time is not none else 'N/A' }} 分鐘</div>
+
+        <div class="camera-grid">
+            {% for camera in cameras %}
+            <div class="camera-card" data-type="{{ camera.type }}" data-ip="{{ camera.ip }}" data-channel="{{ camera.NVR_channel }}" data-fn="{{ camera.function_switches | tojson }}">
+            <div class="image-wrapper">
+                {% if camera.image_url %}
+                <img src="{{ camera.image_url }}" alt="Camera {{ camera.NVR_channel }}" class="camera-image">
+                {% else %}
+                <div class="camera-no-image">
+                    <span class="error-text" style="color: white;">異常</span>
+                </div>
+                {% endif %}
+                <div class="button-group over-image">
+                    {% if camera.function_switches.adjust_camera_zoom_on_detection %}
+                    <button class="button blue">追焦</button>
+                    {% endif %}
+                    {% if camera.function_switches.enable_camera_ptz %}
+                    <button class="button green">巡弋</button>
+                    {% endif %}
+                    {% if camera.function_switches.stage1_detection %}
+                    <button class="button orange">一階</button>
+                    {% endif %}
+                    {% if camera.function_switches.stage2_detection %}
+                    <button class="button brown">二階</button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="camera-info">
+                <div class="camera-info-row">
+                    {% if camera.location %}
+                    <div class="camera-location">{{ camera.location }}</div>
+                    {% endif %}
+                    <div class="camera-status {{ camera.type }}">
+                        <span class="status-dot"></span>
+                        <span class="status-indicator">{% if camera.type == 'current_polling' %}輪詢中{% elif camera.type == 'fixed' %}常駐{% elif camera.type == 'waiting_polling' %}未輪詢{% else %}{{ camera.type }}{% endif %}</span>
+                    </div>
+                </div>
+                <div class="camera-channel">
+                    <span>連接頻道：{{ camera.NVR_channel }}</span>
+                    <span class="workstation-badge" data-workstation-display data-ip="{{ camera.ip }}" title="{{ camera.ip }}"></span>
+                </div>
+            </div>
+            </div>
+            {% endfor %}
+
+        </div>
+        </div>
+    </div>
+
+  </div>
+
+  <!-- API 服務層 -->
+  <script src="{{ url_for('static', filename='js/api-service.js') }}"></script>
+
+  <!-- 工作站顯示名稱 -->
+  <script src="{{ url_for('static', filename='js/workstation-display.js') }}"></script>
+
+  <!-- SSE 事件管理器 -->
+  <script src="{{ url_for('static', filename='js/sse-manager.js') }}"></script>
+
+  <!-- 應用程式初始化 -->
+  <script src="{{ url_for('static', filename='js/app-init.js') }}"></script>
+  
+  
+  <!-- UI 交互邏輯（相機卡片、篩選器、設定模式） -->
+  <script src="{{ url_for('static', filename='js/ui-interactions.js') }}"></script>
+</body>
+</html>
+

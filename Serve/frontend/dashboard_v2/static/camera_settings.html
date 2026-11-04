@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>攝影機設定</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/camera.css">
+</head>
+<body>
+  <div class="camera-page">
+    <div class="camera-page-topbar">
+      <div class="topbar-info-section">
+        <div class="topbar-info-row" id="camera-info">
+          <span class="location-title" id="camera-location">載入中...</span>
+          <span class="topbar-info-separator">|</span>
+          <span class="topbar-info-label">IP</span>
+          <span class="topbar-info-value" id="camera-ip">載入中...</span>
+          <span class="topbar-info-separator">|</span>
+          <span class="topbar-info-label">編號</span>
+          <span class="topbar-info-value" id="camera-channel">載入中...</span>
+        </div>
+      </div>
+      <div></div>
+      <div class="topbar-back-section">
+        <button id="edit-mode-btn" style="margin-right: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 9999px; background: #333333; color: #EAEAEA; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.25); transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease; cursor: pointer; font-size: 14px;">開啟設定</button>
+        <button id="back-btn" class="button gray">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          返回
+        </button>
+      </div>
+    </div>
+
+    <div class="camera-page-content">
+      <div class="camera-layout">
+        <!-- 左側圖片 -->
+        <div class="camera-image-section">
+          <div id="camera-image-container">
+            <div class="camera-no-preview">
+              <span class="no-image-text">載入中...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右側設定 -->
+        <div class="camera-settings-section">
+          <div class="switches-card">
+            <div class="switch-list" id="switch-list-container">
+              <div class="loading-message">載入設定中...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 相機設定頁面初始化 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        // 從 sessionStorage 獲取相機數據
+        const cameraDataJson = sessionStorage.getItem('selectedCamera');
+        if (!cameraDataJson) {
+          throw new Error('找不到相機數據，請從主頁面重新選擇');
+        }
+        
+        const camera = JSON.parse(cameraDataJson);
+        console.log('📦 從 sessionStorage 載入相機數據:', camera);
+        
+        // 檢查數據時效性（可選，防止過期數據）
+        const dataAge = Date.now() - (camera.timestamp || 0);
+        if (dataAge > 30 * 60 * 1000) { // 30分鐘過期
+          throw new Error('相機數據已過期，請重新選擇');
+        }
+        
+        // 更新頁面標題
+        document.title = `攝影機設定 - CH ${camera.NVR_channel}`;
+        
+        // 更新頂部信息
+        document.getElementById('camera-location').textContent = camera.location || '未設定位置';
+        document.getElementById('camera-ip').textContent = camera.ip || 'unknown';
+        document.getElementById('camera-channel').textContent = camera.NVR_channel;
+        
+        // 更新圖片
+        const imageContainer = document.getElementById('camera-image-container');
+        if (camera.image_url) {
+          imageContainer.innerHTML = `<img src="${camera.image_url}" alt="Camera ${camera.NVR_channel}" class="camera-preview">`;
+        } else {
+          imageContainer.innerHTML = '<div class="camera-no-preview"><span class="no-image-text">無圖片</span></div>';
+        }
+        
+        
+        // 更新按鈕狀態
+        const pollingBtn = document.querySelector('.polling-btn');
+        const fixedBtn = document.querySelector('.fixed-btn');
+        
+        if (pollingBtn && fixedBtn) {
+          pollingBtn.classList.remove('active');
+          fixedBtn.classList.remove('active');
+          
+          const type = camera.type;
+          if (type === 'current_polling' || type === 'waiting_polling') {
+            pollingBtn.classList.add('active');
+          } else if (type === 'fixed') {
+            fixedBtn.classList.add('active');
+          }
+        }
+        
+        // 綁定返回按鈕事件
+        document.getElementById('back-btn').addEventListener('click', () => {
+          // 清理 sessionStorage（可選）
+          sessionStorage.removeItem('selectedCamera');
+          window.history.back();
+        });
+        
+        // 存儲相機數據到全域變數，供其他功能使用
+        window.currentCamera = camera;
+        
+        // 動態生成功能開關
+        generateFunctionSwitches(camera.function_switches);
+        
+        // 初始化編輯模式管理（必須在生成開關之後）
+        initializeEditMode();
+        
+      } catch (error) {
+        console.error('載入相機設定失敗:', error);
+        alert('載入相機設定失敗: ' + error.message);
+        window.history.back();
+      }
+    });
+    
+    // 轉換時間格式為24小時制
+    function convertTo24Hour(timeStr) {
+      if (!timeStr || timeStr.trim() === '') return '';
+      
+      // 如果已經是24小時制格式 (HH:MM)，直接返回
+      if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeStr)) {
+        return timeStr;
+      }
+      
+      // 處理12小時制格式 (例如: "2:30 PM", "10:15 AM")
+      const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)/i);
+      if (match) {
+        let hour = parseInt(match[1]);
+        const minute = match[2];
+        const period = match[3].toLowerCase();
+        
+        if (period === 'pm' && hour !== 12) {
+          hour += 12;
+        } else if (period === 'am' && hour === 12) {
+          hour = 0;
+        }
+        
+        // 確保小時是兩位數格式
+        const hourStr = hour.toString().padStart(2, '0');
+        const result = `${hourStr}:${minute}`;
+        console.log(`時間轉換: ${timeStr} → ${result}`);
+        return result;
+      }
+      
+      // 如果無法識別格式，返回原值
+      console.warn('無法識別時間格式:', timeStr);
+      return timeStr;
+    }
+    
+    // 動態生成功能開關 - 左右兩列佈局（包含運作模式）
+    function generateFunctionSwitches(functionSwitches) {
+      const container = document.getElementById('switch-list-container');
+      
+      // 生成運作模式項目
+      function generateModeItem() {
+        const currentType = window.currentCamera?.type || 'waiting_polling';
+
+        return `
+          <div class="switch-item">
+            <div class="switch-content">
+              <div class="switch-label">運作模式</div>
+            </div>
+            <div class="mode-buttons">
+              <button class="mode-btn polling-btn ${currentType === 'current_polling' || currentType === 'waiting_polling' ? 'active' : ''}" disabled>輪詢</button>
+              <button class="mode-btn fixed-btn ${currentType === 'fixed' ? 'active' : ''}" disabled>常駐</button>
+            </div>
+          </div>
+        `;
+      }
+      
+      const switchLabels = {
+        'enable_smoke_notify': '啟用煙霧通知',
+        'enable_google_upload': '上傳至 Google 雲端', 
+        'enable_nvr_recording': '啟用 NVR 錄影',
+        'enable_upload_images': '上傳事件圖片',
+        'adjust_camera_zoom_on_detection': '偵測到煙霧後是否追焦',
+        'enable_camera_ptz': '啟用巡弋功能',
+        'enable_night_detection': '啟用夜間偵測',
+        'stage1_detection': '啟用第一階檢測', 
+        'stage2_detection': '啟用第二階檢測'
+      };
+      
+      // 以列為單位排列，讓相關設定在同一列中更容易比較。
+      const switchRows = [
+        ['mode', 'enable_smoke_notify'],
+        ['enable_nvr_recording', 'enable_google_upload'],
+        ['enable_camera_ptz', 'enable_upload_images'],
+        ['stage1_detection', 'stage2_detection'],
+        ['enable_night_detection', 'adjust_camera_zoom_on_detection']
+      ];
+      
+      const hasSubtitle = ['enable_camera_ptz', 'stage1_detection', 'stage2_detection', 
+                          'enable_nvr_recording', 'adjust_camera_zoom_on_detection', 'enable_night_detection'];
+      
+      // 生成開關項目的函數
+      function generateSwitchItem(key, switchIndex) {
+        if (!(key in functionSwitches) || typeof functionSwitches[key] !== 'boolean') {
+          return '';
+        }
+        
+        const hasSubtitleClass = hasSubtitle.includes(key) ? 'has-subtitle' : '';
+        
+        let subtitle = '';
+        if (key === 'enable_camera_ptz') {
+          const patrolTime = functionSwitches.patrol_time || '';
+          subtitle = `<div class="switch-subtitle">巡弋模式的停留時間: <span class="editable-value"><input type="number" class="param-input" data-param="patrol_time" value="${patrolTime}" disabled min="0" max="99" step="1"> 分鐘</span></div>`;
+        } else if (key === 'stage1_detection') {
+          const confidence = functionSwitches.stage1_confidence || '';
+          subtitle = `<div class="switch-subtitle">一階信心門檻: <span class="editable-value"><input type="number" class="param-input" data-param="stage1_confidence" value="${confidence}" disabled min="0" max="1" step="0.1"></span></div>`;
+        } else if (key === 'stage2_detection') {
+          const confidence = functionSwitches.stage2_confidence || '';
+          subtitle = `<div class="switch-subtitle">二階信心門檻: <span class="editable-value"><input type="number" class="param-input" data-param="stage2_confidence" value="${confidence}" disabled min="0" max="1" step="0.1"></span></div>`;
+        } else if (key === 'enable_nvr_recording') {
+          const recordTime = functionSwitches.record_time || '';
+          subtitle = `<div class="switch-subtitle">檢測煙霧後錄影時長: <span class="editable-value"><input type="number" class="param-input" data-param="record_time" value="${recordTime}" disabled min="0" max="99" step="1"> 秒</span></div>`;
+        } else if (key === 'adjust_camera_zoom_on_detection') {
+          const focusTime = functionSwitches.focus_time || '';
+          subtitle = `<div class="switch-subtitle">檢測煙霧後追焦時長: <span class="editable-value"><input type="number" class="param-input" data-param="focus_time" value="${focusTime}" disabled min="0" max="99" step="1"> 秒</span></div>`;
+        } else if (key === 'enable_night_detection') {
+          const startTime = convertTo24Hour(functionSwitches.night_detection_start || '');
+          const endTime = convertTo24Hour(functionSwitches.night_detection_end || '');
+          subtitle = `<div class="switch-subtitle">開始時間: <span class="editable-value"><input type="text" class="param-input time-input" data-param="night_detection_start" value="${startTime}" disabled placeholder="HH:MM" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"></span><br>關閉時間: <span class="editable-value"><input type="text" class="param-input time-input" data-param="night_detection_end" value="${endTime}" disabled placeholder="HH:MM" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"></span></div>`;
+        }
+        
+        return `
+          <div class="switch-item ${hasSubtitleClass}">
+            <div class="switch-content">
+              <div class="switch-label">${switchLabels[key]}</div>
+              ${subtitle}
+            </div>
+            <div class="toggle-switch">
+              <input type="checkbox" id="switch-${switchIndex}" data-switch-key="${key}" ${functionSwitches[key] ? 'checked' : ''}>
+              <label for="switch-${switchIndex}" class="switch-slider"></label>
+            </div>
+          </div>
+        `;
+      }
+
+      // 依照 switchRows 逐列生成，CSS grid 會自動排成左右兩欄。
+      let switchHtml = '';
+      let switchIndex = 0;
+      for (const row of switchRows) {
+        for (const key of row) {
+          if (key === 'mode') {
+            switchHtml += generateModeItem();
+          } else if (key in functionSwitches && typeof functionSwitches[key] === 'boolean') {
+            switchIndex++;
+            switchHtml += generateSwitchItem(key, switchIndex);
+          }
+        }
+      }
+
+      switchHtml += `<div class="switch-item has-subtitle">
+        <div class="switch-content">
+          <div class="switch-label">參考座標距離門檻</div>
+          <div class="switch-subtitle">
+            <input type="number" class="param-input" data-param="reference_distance_threshold_px"
+              value="" disabled min="0" step="any" placeholder="自動" style="width:100px" aria-label="參考座標距離門檻（像素）"> px
+            <div>留空使用圖片寬度的 1/3；僅限制未命中的參考座標。</div>
+          </div>
+        </div>
+      </div>`;
+      container.innerHTML = switchHtml;
+      const referenceInput = container.querySelector('[data-param="reference_distance_threshold_px"]');
+      const referenceThreshold = functionSwitches.reference_distance_threshold_px;
+      if (referenceThreshold != null && Number.isFinite(Number(referenceThreshold)) && Number(referenceThreshold) > 0) {
+        referenceInput.value = Number(referenceThreshold);
+      }
+      
+      // 綁定運作模式按鈕事件
+      bindModeButtonEvents();
+      
+      // 綁定數字輸入限制事件
+      bindNumberInputLimits();
+      
+      // 強制設定24小時制
+      force24HourFormat();
+      
+      // 綁定時間輸入驗證
+      bindTimeInputValidation();
+    }
+    
+    function bindModeButtonEvents() {
+      const pollingBtn = document.querySelector('.polling-btn');
+      const fixedBtn = document.querySelector('.fixed-btn');
+      
+      if (pollingBtn) {
+        pollingBtn.addEventListener('click', (e) => {
+          if (pollingBtn.disabled) {
+            e.preventDefault();
+            return;
+          }
+          
+          // 更新按鈕狀態
+          pollingBtn.classList.add('active');
+          fixedBtn.classList.remove('active');
+        });
+      }
+      
+      if (fixedBtn) {
+        fixedBtn.addEventListener('click', (e) => {
+          if (fixedBtn.disabled) {
+            e.preventDefault();
+            return;
+          }
+          
+          // 更新按鈕狀態
+          fixedBtn.classList.add('active');
+          pollingBtn.classList.remove('active');
+        });
+      }
+    }
+    
+    function bindNumberInputLimits() {
+      // 處理2位數限制的欄位（時間相關）
+      const twoDigitInputs = document.querySelectorAll('.param-input[type="number"]:not([data-param*="confidence"])');
+      twoDigitInputs.forEach(input => {
+        input.addEventListener('input', (e) => {
+          let value = e.target.value;
+          // 移除非數字字符
+          value = value.replace(/[^0-9]/g, '');
+          // 限制最多2位數
+          if (value.length > 2) {
+            value = value.substring(0, 2);
+          }
+          e.target.value = value;
+        });
+        
+        input.addEventListener('keypress', (e) => {
+          // 只允許數字鍵
+          if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+            e.preventDefault();
+          }
+          // 如果已經有2位數，阻止再輸入
+          if (e.target.value.length >= 2 && /[0-9]/.test(e.key)) {
+            e.preventDefault();
+          }
+        });
+      });
+      
+      // 處理閾值欄位（支持小數點後一位）
+      const confidenceInputs = document.querySelectorAll('.param-input[type="number"][data-param*="confidence"]');
+      confidenceInputs.forEach(input => {
+        // 移除所有鍵盤限制，讓瀏覽器原生處理
+        input.addEventListener('input', (e) => {
+          let value = e.target.value;
+          
+          // 確保數值在0-1範圍內
+          if (value !== '') {
+            const numValue = parseFloat(value);
+            if (numValue > 1) {
+              e.target.value = '1';
+            } else if (numValue < 0) {
+              e.target.value = '0';
+            } else {
+              // 限制小數位數為1位
+              const decimalMatch = value.match(/^(\d*)\.(\d+)$/);
+              if (decimalMatch && decimalMatch[2].length > 1) {
+                e.target.value = parseFloat(value).toFixed(1);
+              }
+            }
+          }
+        });
+      });
+    }
+    
+    function bindTimeInputValidation() {
+      // 針對文字型時間輸入欄位的驗證
+      const timeInputs = document.querySelectorAll('.time-input[type="text"]');
+      timeInputs.forEach(input => {
+        // 輸入時的格式驗證
+        input.addEventListener('input', function(e) {
+          let value = e.target.value;
+          
+          // 移除非數字和非冒號的字符
+          value = value.replace(/[^0-9:]/g, '');
+          
+          // 限制格式為 HH:MM
+          if (value.length > 5) {
+            value = value.substring(0, 5);
+          }
+          
+          // 自動添加冒號
+          if (value.length === 2 && !value.includes(':')) {
+            value = value + ':';
+          }
+          
+          e.target.value = value;
+        });
+        
+        // 失去焦點時的完整驗證
+        input.addEventListener('blur', function(e) {
+          let value = e.target.value;
+          if (value && value.length > 0) {
+            const match = value.match(/^(\d{1,2}):?(\d{0,2})$/);
+            if (match) {
+              let hour = parseInt(match[1]) || 0;
+              let minute = parseInt(match[2]) || 0;
+              
+              // 限制小時範圍 0-23
+              if (hour > 23) hour = 23;
+              // 限制分鐘範圍 0-59
+              if (minute > 59) minute = 59;
+              
+              // 格式化為 HH:MM
+              const formattedTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+              e.target.value = formattedTime;
+              
+              console.log(`時間格式化: ${value} → ${formattedTime}`);
+            } else if (value.length > 0) {
+              // 格式不正確，清空
+              e.target.value = '';
+              console.warn('無效的時間格式，已清空:', value);
+            }
+          }
+        });
+      });
+    }
+    
+    function force24HourFormat() {
+      // 針對原生時間輸入的24小時制設定（備用）
+      const timeInputs = document.querySelectorAll('.time-input[type="time"]');
+      timeInputs.forEach(input => {
+        input.setAttribute('step', '60');
+        input.classList.add('force-24hr');
+      });
+    }
+    
+    // 編輯模式管理
+    let isEditMode = false;
+    
+    function initializeEditMode() {
+      const editBtn = document.getElementById('edit-mode-btn');
+      
+      // 初始狀態：禁用所有控制項
+      setControlsEnabled(false);
+      
+      // 綁定按鈕點擊事件
+      editBtn.addEventListener('click', () => {
+        if (!isEditMode) {
+          // 切換到編輯模式
+          enterEditMode();
+        } else {
+          // 保存設定
+          saveSettings();
+        }
+      });
+    }
+    
+    function enterEditMode() {
+      isEditMode = true;
+      const editBtn = document.getElementById('edit-mode-btn');
+      
+      // 更新按鈕文字和樣式 - 保存狀態使用綠色背景
+      editBtn.textContent = '保存';
+      editBtn.style.background = '#28A745';
+      
+      // 啟用所有控制項
+      setControlsEnabled(true);
+      
+      console.log('📝 進入編輯模式');
+    }
+    
+    function exitEditMode() {
+      isEditMode = false;
+      const editBtn = document.getElementById('edit-mode-btn');
+      
+      // 恢復按鈕文字和樣式 - 回到原本的灰色背景
+      editBtn.textContent = '開啟設定';
+      editBtn.style.background = '#333333';
+      
+      // 禁用所有控制項
+      setControlsEnabled(false);
+      
+      console.log('💾 退出編輯模式');
+    }
+    
+    function setControlsEnabled(enabled) {
+      console.log(`🔧 設定控制項狀態: ${enabled ? '啟用' : '禁用'}`);
+      
+      // 禁用/啟用所有開關
+      const switches = document.querySelectorAll('input[type="checkbox"]');
+      switches.forEach(sw => {
+        sw.disabled = !enabled;
+      });
+      
+      // 禁用/啟用參數輸入欄位
+      const paramInputs = document.querySelectorAll('.param-input');
+      paramInputs.forEach(input => {
+        input.disabled = !enabled;
+      });
+      
+      // 運作模式按鈕禁用
+      const modeButtons = document.querySelectorAll('.mode-btn');
+      modeButtons.forEach(btn => {
+
+        // 運作模式按鈕若要開啟使用，請取消下面註解
+        <!-- tn.disabled = !enabled;
+        if (enabled) {
+          btn.classList.remove('disabled');
+          btn.style.pointerEvents = 'auto';
+        } else {
+          btn.classList.add('disabled');
+          btn.style.pointerEvents = 'none';
+        }
+
+        btn.disabled = true;
+        btn.classList.add('disabled');
+        btn.style.pointerEvents = 'none';
+      });
+      
+      // 額外的視覺回饋
+      const switchItems = document.querySelectorAll('.switch-item');
+      switchItems.forEach(item => {
+        if (enabled) {
+          item.style.opacity = '1';
+        } else {
+          item.style.opacity = '0.9';
+        }
+      });
+      
+      console.log(`📊 找到 ${switches.length} 個開關, ${modeButtons.length} 個模式按鈕, ${paramInputs.length} 個參數輸入欄位`);
+    }
+    
+    async function saveSettings() {
+      try {
+        console.log('💾 開始保存設定...');
+        
+        // 收集當前設定
+        const settings = collectCurrentSettings();
+        
+        // 顯示要發送的 JSON 格式
+        console.log('📤 準備發送的 JSON:', JSON.stringify(settings, null, 2));
+        
+        // 調用 send_setting API
+        const response = await fetch('/config/send_setting', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(settings)
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ 設定保存成功:', result);
+          console.log('📋 響應結構:', Object.keys(result));
+          console.log('📋 響應中的 ETag:', result.etag);
+          console.log('📋 響應中的 data.etag:', result.data?.etag);
+          console.log('📋 當前的 ETag:', window.bootETag || '未設置');
+          
+          // 檢查 ETag 是否有更新（使用 result.data.etag）
+          const newETag = result.data?.etag;
+          console.log('📋 解析出的新 ETag:', newETag);
+          
+          if (newETag) {
+            const currentETag = window.bootETag || '';
+            console.log('📋 當前 ETag:', currentETag);
+            console.log('📋 新 ETag:', newETag);
+            
+            // 更新全域 ETag
+            window.bootETag = newETag;
+            
+            // 更新相機數據
+            if (result.data && result.data.cameras) {
+              console.log('📦 更新相機數據:', result.data.cameras.length, '個相機');
+              
+              const currentChannel = window.currentCamera.NVR_channel;
+              const updatedCamera = result.data.cameras.find(cam => cam.NVR_channel === currentChannel);
+              
+              if (updatedCamera) {
+                console.log('🔄 更新當前相機數據');
+                
+                // 更新 sessionStorage
+                const updatedCameraData = {
+                  ...updatedCamera,
+                  timestamp: Date.now()
+                };
+                sessionStorage.setItem('selectedCamera', JSON.stringify(updatedCameraData));
+                
+                // 更新全域變數
+                window.currentCamera = updatedCameraData;
+              }
+            }
+            
+            // 設置更新標記，讓主頁面知道需要刷新數據（無論 ETag 是否變化）
+            sessionStorage.setItem('dashboard_needs_update', JSON.stringify({
+              etag: newETag,
+              timestamp: Date.now(),
+              source: 'camera_settings'
+            }));
+            
+            console.log('📝 已設置主頁面更新標記');
+            
+            // 如果有全域 ETag 更新函數，在此調用
+            if (window.updateETag) {
+              window.updateETag(newETag);
+            }
+          } else {
+            console.warn('⚠️ API 響應中沒有找到 ETag');
+          }
+          
+          // 顯示成功訊息
+          alert('設定已成功保存！');
+          
+          // 退出編輯模式
+          exitEditMode();
+          
+        } else {
+          throw new Error(`API 調用失敗: ${response.status}`);
+        }
+        
+      } catch (error) {
+        console.error('❌ 保存設定失敗:', error);
+        alert('保存設定失敗: ' + error.message);
+      }
+    }
+    
+    function collectCurrentSettings() {
+      const settings = {
+        NVR_channel: window.currentCamera.NVR_channel,
+        function_switches: {}
+      };
+      
+      // 收集所有開關狀態
+      const switches = document.querySelectorAll('input[type="checkbox"]');
+      switches.forEach(sw => {
+        const functionName = sw.dataset.switchKey;
+        if (functionName) {
+          settings.function_switches[functionName] = sw.checked;
+        }
+      });
+      
+      // 收集所有參數值
+      const paramInputs = document.querySelectorAll('.param-input');
+      paramInputs.forEach(input => {
+        const paramName = input.getAttribute('data-param');
+        let value = input.value;
+        if (paramName === 'reference_distance_threshold_px') {
+          value = value.trim();
+          const threshold = value === '' ? null : Number(value);
+          if (threshold !== null && (!Number.isFinite(threshold) || threshold <= 0)) {
+            throw new Error('參考座標距離門檻需大於 0；留空則使用圖片寬度的 1/3。');
+          }
+          // Explicit null resets a previous override instead of leaving it unchanged.
+          settings.function_switches[paramName] = threshold;
+          return;
+        }
+        
+        // 根據輸入類型轉換數值
+        if (input.type === 'number' && value !== '') {
+          value = parseFloat(value);
+        }
+        
+        if (paramName && value !== '') {
+          settings.function_switches[paramName] = value;
+        }
+      });
+      
+      // 收集運作模式 - 這個應該分別處理，不是 function_switches 的一部分
+      const activeMode = document.querySelector('.mode-btn.active');
+      if (activeMode) {
+        if (activeMode.classList.contains('polling-btn')) {
+          settings.type = 'current_polling';
+        } else if (activeMode.classList.contains('fixed-btn')) {
+          settings.type = 'fixed';
+        }
+      }
+      
+      console.log('📦 收集的設定:', settings);
+      return settings;
+    }
+  </script>
+</body>
+</html>
+
+

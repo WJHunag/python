@@ -1,0 +1,38 @@
+name: smoke-stage1-detector
+
+services:
+  stage1-detector:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: smoke-stage1-detector:latest
+    container_name: smoke_stage1_detector
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Asia/Taipei}
+      INPUT_DIR: /root/workspace/input
+      OUTPUT_DIR: /root/workspace/output
+      DISTRIBUTED_CONFIG_DIR: /root/workspace/smoke_config/distributed_config
+      DETECTION_BACKEND: ${DETECTION_BACKEND:-yolov6_api}
+      YOLOV6_API_URL: ${YOLOV6_API_URL:-http://yolov6_infer:8000/infer}
+      ULTRALYTICS_WEIGHTS: ${ULTRALYTICS_WEIGHTS:-/root/workspace/weights/ultralytics/best.pt}
+      ULTRALYTICS_IMGSZ: ${ULTRALYTICS_IMGSZ:-640}
+      DEVICE: ${DEVICE:-cuda:0}
+      SCORE_THR: ${SCORE_THR:-0.7}
+      NIGHT_SCORE_THR: ${NIGHT_SCORE_THR:-0.9}
+      GROUP_SIZE: ${GROUP_SIZE:-8}
+      JSON_PATH: ${JSON_PATH:-/root/workspace/smoke_camera_config.json}
+      UI_SERVER_UPDATE_URL: ${UI_SERVER_UPDATE_URL:-http://192.168.4.110:58080/image/image_update}
+      WORKSTATION_DEFAULT_PORT: ${WORKSTATION_DEFAULT_PORT:-5001}
+    volumes:
+      - ../input:/root/workspace/input
+      - ../output:/root/workspace/output
+      - ../smoke_config/distributed_config:/root/workspace/smoke_config/distributed_config
+      - ../weights:/root/workspace/weights:ro
+    networks:
+      - smoke_detection
+
+networks:
+  smoke_detection:
+    external: true
+    name: ${SMOKE_DOCKER_NETWORK:-smoke_detection}

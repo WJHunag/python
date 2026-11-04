@@ -1,0 +1,567 @@
+/* ========================== */
+/*        Reset 基礎樣式      */
+/* ========================== */
+* {
+  box-sizing: border-box;
+  font-weight: normal;   /* 這裡加上全域字重設定 */
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background-color: #121212;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+
+/* ========================== */
+/*         Layout 佈局        */
+/* ========================== */
+.container {
+  display: flex;
+  height: 100vh; /* 讓 container 撐滿整個畫面高度 */
+}
+
+.whole-sidebar {
+  width: 240px;
+  background-color: #1A1A1A;
+  padding: 20px;
+  flex-shrink: 0;
+  padding-bottom: 60px;
+  overflow-y: auto; /* 允許側邊捲動 */
+}
+
+.content-wrapper {
+  flex: 1;
+  overflow-y: auto;  /* 僅主區塊可垂直滾動 */
+  overflow-x: hidden;
+  max-height: 100vh;
+  padding-bottom: 60px; /* 避免最後一張卡片被裁切 */
+}
+
+.content {
+  padding: 20px;
+  min-height: 100%;
+}
+
+/* 主內容統計標題樣式 */
+.content .header h2 {
+  font-size: 14px;
+  color: #D3D3D3;
+  font-weight: normal;
+  margin: 0;
+}
+
+/* ========================== */
+/*          Topbar 樣式       */
+/* ========================== */
+.topbar {
+  height: 60px;
+  background-color: #0E0E0E;
+  display: flex;
+  align-items: center;
+  padding: 0 32px; /* 左右各 32px 的 padding */
+  justify-content: flex-start;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 20px;
+  color: #fff;
+}
+
+/* 通用隱藏類別 */
+.hidden {
+  display: none;
+}
+
+/* ========================== */
+/*        Scrollbar 樣式      */
+/* ========================== */
+.whole-sidebar::-webkit-scrollbar,
+.content-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.whole-sidebar::-webkit-scrollbar-track,
+.content-wrapper::-webkit-scrollbar-track {
+  background: #1A1A1A;
+}
+
+.whole-sidebar::-webkit-scrollbar-thumb,
+.content-wrapper::-webkit-scrollbar-thumb {
+  background-color: #444;
+  border-radius: 4px;
+}
+
+.whole-sidebar::-webkit-scrollbar-thumb:hover,
+.content-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: #666;
+}
+
+
+/* ========================== */
+/*      Sidebar 內容樣式      */
+/* ========================== */
+.whole-sidebar h2 {
+  font-size: 14px;
+  color: #A0A0A0;
+  margin-top: 0;
+}
+
+/* 設定模式（左側標題固定，內容可收合，無外框） */
+.settings-panel { margin-bottom: 12px; }
+/* 讓設定按鈕與標題在同一水平線垂直置中 */
+.settings-panel-header {
+  display: flex;
+  align-items: center;   /* 垂直置中 */
+  gap: 0px;
+  justify-content: space-between; /* 按鈕靠右 */
+}
+.settings-panel-header h2 {
+  margin: 0;             /* 移除預設上下外距避免偏移 */
+  line-height: 1;        /* 與按鈕高度搭配更容易置中 */
+}
+.settings-panel-body {
+  padding: 0; /* 移除左右 padding，讓置中真正置於可視寬度中央 */
+  margin-top: 8px;
+}
+/* 置中工作站 IP 與輪詢/常駐 */
+.settings-panel-row {
+  display: flex;
+  justify-content: flex-start; /* 靠左 */
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+/* 設定面板：輪詢/常駐 單選群組水平置中 */
+.settings-panel-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  justify-content: flex-start; /* 靠左 */
+  align-items: center;
+  width: 100%;
+}
+.settings-panel-hint { 
+  font-size: 12px; 
+  color: #888; 
+  margin-top: 20px;
+  margin-bottom: 12px; }
+
+/* 設定面板：工作站 IP 標籤字級 */
+.settings-panel-row > label {
+  font-size: 14px;
+}
+
+/* 設定面板：輪詢/常駐單選標籤字級與顏色 */
+.settings-panel-actions label {
+  font-size: 12px;
+  color: #D3D3D3;
+  margin-bottom: 50px;
+}
+
+/* ----------------------------------------
+   IP 分組樣式
+---------------------------------------- */
+.ip-group {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #333;
+}
+
+.ip-group h3 {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #ffffff;
+  font-weight: normal;
+}
+
+.ip-group input[type="checkbox"] {
+  margin-right: 8px;
+  accent-color: #26549d;
+}
+
+/* ----------------------------------------
+   篩選項目 (Checkbox) 樣式
+---------------------------------------- */
+.filter-item {
+  height: 40px;
+  display: flex;
+  align-items: center; /* 垂直置中 */
+  padding-left: 12px;   
+  position: relative;   /* 為絕對定位的數量提供定位基準 */
+}
+
+.filter-item input[type="checkbox"] {
+  margin-right: 8px;
+  accent-color: #4e9dcf;
+}
+
+.filter-item label {
+  font-size: 12px;
+  color: #D3D3D3;
+}
+
+/* 機台數量顯示 */
+.count-badge {
+  color: #A0A0A0;
+  font-size: 12px;
+  position: absolute;
+  right: 12px;
+}
+
+/* ========================== */
+/*         Header 區塊        */
+/* ========================== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  margin-top: 0px;
+}
+
+
+/* ========================== */
+/*       Camera Grid 卡片     */
+/* ========================== */
+.camera-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.camera-card {
+  background-color: #222;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+/* 設定模式視覺：可選狀態與已選狀態 */
+.camera-card.selectable {
+  outline: 2px dashed #4e9dcf;
+  cursor: pointer;
+}
+
+.camera-card.selected {
+  outline: 3px solid #ffc107 !important;
+  background-color: #444 !important;
+}
+
+.camera-image {
+  width: 100%;
+  border-radius: 4px;
+}
+
+
+/* ========================== */
+/*       Button 群組樣式      */
+/* ========================== */
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.button {
+  padding: 3px 8px;
+  border: none;
+  border-radius: 3px;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.blue   { background-color: #007bff; }
+.green  { background-color: #28a745; }
+.orange { background-color: #fd7e14; }
+.gray   { background-color: #6c757d; }
+.red    { background-color: #dc3545; }
+.yellow { background-color: #ffc107; }
+
+
+/* ========================== */
+/*     Camera Info / Status   */
+/* ========================== */
+.camera-info {
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.camera-location {
+  font-size: 14px;
+  color: #fff;
+  margin-bottom: 0;
+  font-weight: bold;
+  padding-left: 8px;
+  margin-top: 4px;
+}
+
+.camera-no-image {
+  width: 100%;
+  height: 240px;
+  background-color: #808080;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.error-text {
+  color: #ff0000;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* 狀態方塊與文字 */
+.camera-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 20px; /* 右側預留 40px */
+}
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+  background-color: #777; /* 預設 */
+}
+/* 顏色對應：輪詢中=藍，未輪詢=黃，常駐=綠 */
+.camera-status.current_polling .status-dot { background-color: #3498db; }
+.camera-status.waiting_polling .status-dot { background-color: #ffc107; }
+.camera-status.fixed .status-dot { background-color: #28a745; }
+
+/* 狀態文字樣式 */
+.camera-status .status-indicator {
+  color: #A0A0A0;
+  font-size: 14px;
+  line-height: 14px;           /* 行高與字體一致，避免上下不對齊 */
+  display: inline-flex;        /* 讓字元在容器中可垂直置中 */
+  align-items: center;         /* 垂直置中 */
+}
+
+/* 連接頻道樣式 */
+.camera-channel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #A0A0A0;
+  padding-left: 8px;
+  margin-top: 2px;   /* 與 location 距離 2px */
+  margin-bottom: 0px; /* 下方 0px */
+}
+
+.workstation-badge {
+  display: inline-flex;
+  align-items: center;
+  max-width: 84px;
+  height: 18px;
+  padding: 0 6px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #D8D8D8;
+  font-size: 11px;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 移除左側布局的覆寫：保留原本的橫向排版 */
+.card-row { display: none; }
+.card-main { display: contents; }
+
+/* 固定四個模式按鈕尺寸為 66x28px（沿用既有 .button 類別） */
+.button-group .button {
+  width: 50px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* 右側主體佔滿 */
+.card-main {
+  flex: 1;
+  min-width: 0; /* 解決內容溢出 */
+}
+
+/* 圖片維持滿寬 */
+.card-main .camera-image,
+.card-main .camera-no-image {
+  width: 100%;
+
+}
+
+/* 拉近資訊與狀態距離 */
+.camera-info { margin-top: 6px; }
+.camera-status { margin-top: 4px; }
+
+.camera-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 讓狀態在 location+機號 的整體高度中垂直置中 */
+.camera-info {
+  position: relative;
+  padding-right: 80px; /* 預留右側空間給狀態與方塊 */
+}
+.camera-info .camera-status {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding-right: 0; /* 由絕對定位控制右側距離 */
+}
+
+/* 常駐模式靠右 12px */
+.camera-info .camera-status.fixed {
+  right: 12px;
+}
+/* 輪詢中與未輪詢也靠右 12px */
+.camera-info .camera-status.current_polling {
+  right: 12px;
+}
+.camera-info .camera-status.waiting_polling {
+  right: 12px;
+}
+
+/* 影像容器，供覆蓋元素定位 */
+.image-wrapper {
+  position: relative;
+}
+
+/* 覆蓋在圖片左上角的按鈕群組 */
+.over-image {
+  position: absolute;
+  left: 8px;   /* 與圖片左邊對齊 */
+  top: 8px;     /* 與圖片上方留距離（由原本 bottom 改為 top） */
+  display: flex;
+  gap: 4px;
+  margin-top: 0; /*.over-image 同時有 .button-group 的樣式。就算 top: 0，這個 margin-top 仍會把它往下推，視覺上像有邊距。*/
+}
+
+/* 覆蓋按鈕維持既有尺寸（依使用者調整後的 50x28） */
+.over-image .button {
+  width: 50px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  white-space: nowrap;
+  /* opacity: 0.5; 文字也會變淡，改用半透明背景取代 */
+}
+
+/* 覆蓋按鈕固定顏色（不依序位） */
+.over-image .button.blue  { background-color: rgba(0, 123, 255, 0.7); }
+.over-image .button.green { background-color: rgba(40, 167, 69, 0.7); }
+.over-image .button.orange{ background-color: rgba(253, 126, 20, 0.7); }
+.over-image .button.brown { background-color: rgba(111, 78, 55, 0.7); }
+
+/* 輪巡間隔時間樣式 */
+.polling-time {
+  font-size: 12px;
+  color: #A0A0A0;
+  margin-top: 0px;
+  margin-bottom: 18px;
+  padding-left: 0; /* 與上方標題同樣左邊間距 */
+}
+
+/* 設定按鈕和更新按鈕美化 */
+#settings-toggle-btn, #refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: #333333; /* 純色背景 */
+  color: #EAEAEA;
+  border: none; /* 移除線框 */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+}
+#settings-toggle-btn::before, #refresh-btn::before {
+  content: none;
+}
+#settings-toggle-btn:hover, #refresh-btn:hover {
+  background: #444444; /* 純色背景 */
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+}
+#settings-toggle-btn:active, #refresh-btn:active {
+  transform: translateY(1px) scale(0.99);
+  background: #3a3a3a; /* 純色背景 */
+}
+#settings-toggle-btn:focus-visible, #refresh-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+/* 取消按鈕樣式（與完成按鈕一致但加強辨識） */
+#settings-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: #333333;
+  color: #EAEAEA;
+  border: none;
+  margin-right: -20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+}
+#settings-cancel-btn::before { content: none; }
+#settings-cancel-btn:hover {
+  background: #444444;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+}
+#settings-cancel-btn:active {
+  transform: translateY(1px) scale(0.99);
+  background: #3a3a3a;
+}
+#settings-cancel-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+/* 隱藏狀態下強制不顯示 */
+#settings-cancel-btn.hidden {
+  display: none !important;
+}
+
+/* 移除側欄最後一個群組的底部線條 */
+.sidebar .ip-group:last-child {
+  border-bottom: none;
+}
